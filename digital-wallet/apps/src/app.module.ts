@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { AuthModule, PrismaModule, throttlerOptions, UserThrottlerGuard, validateEnv } from '@app/shared';
+import { AuthModule, PrismaModule, LoggingInterceptor, throttlerOptions, UserThrottlerGuard, validateEnv } from '@app/shared';
 import { AuthHttpModule } from './auth/auth.module';
 import { GeneralModule } from './general/general.module';
 import { HealthHttpModule } from './health/health.module';
@@ -19,6 +19,9 @@ import { HealthHttpModule } from './health/health.module';
     AuthHttpModule,
     GeneralModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: UserThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: UserThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+  ],
 })
 export class AppModule {}

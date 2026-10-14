@@ -10,12 +10,12 @@ export class RegisterDto {
   @MaxLength(100)
   name: string;
 
-  @ApiProperty({ example: 'ankit@example.com' })
+  @ApiProperty({ example: 'ankit@codegama.com' })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
   @IsEmail()
   email: string;
 
-  @ApiProperty({ example: 'Secret123', description: 'Min 8 chars, at least one letter and one number' })
+  @ApiProperty({ example: 'Ankit@123', description: 'Min 8 chars, at least one letter and one number' })
   @IsString()
   @MinLength(8)
   @MaxLength(72) // bcrypt ignores anything past 72 bytes

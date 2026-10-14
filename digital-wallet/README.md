@@ -4,7 +4,7 @@ A mini digital wallet backend built with **NestJS**, **Prisma** and **MySQL**.
 
 Covers: registration + JWT auth, one wallet per user, deposits / withdrawals / transfers,
 transaction history, multi-currency with exchange rates, daily limits + fraud detection,
-and per-user rate limiting.
+per-user rate limiting, and structured request logging.
 
 ## Getting started
 
@@ -34,6 +34,7 @@ npm run start:dev
 - Production: `npm run build && npm run start:prod`
 
 > The port is currently fixed at **3001** in `apps/src/main.ts`; the `PORT` value in `.env` is validated but not used.
+> `.env` is loaded at startup (via `dotenv/config` in `main.ts`), so `LOG_LEVEL` and the other settings apply even when you run the compiled build.
 
 ## Endpoints
 
@@ -131,6 +132,13 @@ Over the limit you get `429 Too Many Requests` with a `Retry-After` header.
 (Behind a proxy/load balancer, enable `app.set('trust proxy', 1)` so the IP is the real client IP.
 The in-memory store is per-instance; use a Redis storage if you run several instances.)
 
+**Logging.** A global `LoggingInterceptor` logs one line per request, e.g.
+`TransactionsController.deposit POST /api/transactions/deposit -> 201 14ms user=<id>`.
+Expected HTTP errors (4xx) are logged as warnings; unexpected errors as errors with a stack trace.
+Query strings and request bodies are never logged, since they can contain personal data.
+`LOG_LEVEL` (`fatal`, `error`, `warn`, `log`, `debug`, `verbose`; default `log`) controls verbosity:
+each level also enables the more severe ones, so `warn` shows only warnings, errors and fatals.
+
 ## Configuration
 
 Set in `.env` (see `.env.example`). Values are validated at startup, so a bad config fails fast.
@@ -141,6 +149,7 @@ Set in `.env` (see `.env.example`). Values are validated at startup, so a bad co
 | `JWT_SECRET` | required | Random string, at least 32 characters |
 | `JWT_EXPIRES_IN` | `1d` | Token (and cookie) lifetime |
 | `DB_POOL_SIZE` | `10` | Max simultaneous DB connections |
+| `LOG_LEVEL` | `log` | Log verbosity: `fatal`, `error`, `warn`, `log`, `debug`, `verbose` |
 | `THROTTLE_PER_MINUTE` / `THROTTLE_PER_HOUR` | `60` / `1000` | Rate limits for all routes |
 | `AUTH_THROTTLE_PER_MINUTE` / `AUTH_THROTTLE_PER_HOUR` | `10` / `60` | Stricter limits for register/login |
 | `DAILY_LIMIT_USD` | `10000` | Daily transaction limit |
@@ -166,7 +175,8 @@ libs/src/                   business logic, imported as @app/shared
   database/
     prisma/                 Prisma service + MariaDB adapter
     generated/              generated Prisma client (git-ignored)
-  common/                   CurrentUser decorator, per-user throttler guard
+  common/                   CurrentUser decorator, per-user throttler guard, request logging
+                            (logging interceptor, LOG_LEVEL parsing)
   config/                   environment validation
   utils/                    money helpers, wallet row-locking
 ```

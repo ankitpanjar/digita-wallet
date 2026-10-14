@@ -1,4 +1,5 @@
-import { ValidationPipe } from '@nestjs/common';
+import 'dotenv/config';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Request, Response } from 'express';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -6,10 +7,11 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import compression = require('compression');
 import cookieParser = require('cookie-parser');
+import { resolveLogLevels } from '@app/shared';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: resolveLogLevels() });
 
   app.setGlobalPrefix('api');
   app.enableShutdownHooks();
@@ -35,6 +37,7 @@ async function bootstrap() {
   app.getHttpAdapter().get('/api/openapi.json', (_req: Request, res: Response) => res.json(document));
   app.use('/api/docs', apiReference({ content: document, theme: 'default' }));
   await app.listen(3001);
+  new Logger('Bootstrap').log('Digital Wallet API listening on port 3001 (docs at /api/docs)');
 }
 
 bootstrap();
