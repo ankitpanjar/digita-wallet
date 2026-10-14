@@ -1,0 +1,101 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../libs/src/database/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum TransactionDirection {
+  CREDIT
+  DEBIT
+}
+
+model user {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  wallet      wallet?
+  fraudAlerts fraud_alert[]
+
+  @@map("users")
+}
+
+model wallet {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  currency  String   @db.VarChar(3)
+  balance   Decimal  @default(0) @db.Decimal(19, 4)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         user          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions             transaction[]
+  counterpartyTransactions transaction[] @relation("Counterparty")
+
+  @@map("wallets")
+}
+
+model transaction {
+  id        Int                  @id @default(autoincrement())
+  reference String
+  walletId  Int
+  type      TransactionType
+  direction TransactionDirection
+
+  amount       Decimal @db.Decimal(19, 4)
+  currency     String  @db.VarChar(3)
+  balanceAfter Decimal @db.Decimal(19, 4)
+
+  originalAmount   Decimal @db.Decimal(19, 4)
+  originalCurrency String  @db.VarChar(3)
+  exchangeRate     Decimal @default(1) @db.Decimal(18, 8)
+
+  amountUsd Decimal @db.Decimal(19, 4)
+
+  counterpartyWalletId Int?
+  description          String? @db.VarChar(255)
+  createdAt            DateTime @default(now())
+
+  wallet             wallet  @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  counterpartyWallet wallet? @relation("Counterparty", fields: [counterpartyWalletId], references: [id], onDelete: SetNull)
+
+  @@index([walletId, createdAt])
+  @@index([reference])
+  @@index([counterpartyWalletId])
+  @@map("transactions")
+}
+
+model exchange_rate {
+  currency  String   @id @db.VarChar(3)
+  rate      Decimal  @db.Decimal(18, 8)
+  updatedAt DateTime @updatedAt
+
+  @@map("exchange_rates")
+}
+
+model fraud_alert {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  rule      String   @db.VarChar(64)
+  details   String   @db.VarChar(500)
+  createdAt DateTime @default(now())
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("fraud_alerts")
+}

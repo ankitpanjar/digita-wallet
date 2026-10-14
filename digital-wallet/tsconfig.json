@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "paths": { "@app/shared": ["./libs/src"], "@app/shared/*": ["./libs/src/*"] },
+    "incremental": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "types": ["node", "jest"],
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false, 
+    "forceConsistentCasingInFileNames": true
+  }
+}

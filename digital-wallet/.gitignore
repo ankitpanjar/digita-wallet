@@ -1,0 +1,32 @@
+# dependencies
+node_modules
+
+# build output
+dist
+*.tsbuildinfo
+
+# generated Prisma client (run `npm run prisma:generate`)
+libs/src/database/generated
+
+# environment / secrets (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# cookie jars from curl examples
+jar.txt
+
+# logs
+*.log
+npm-debug.log*
+
+# test coverage
+coverage
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.swp
